@@ -1,5 +1,5 @@
 const GITHUB_OWNER = 'shutong20221229-rgb';
-const GITHUB_REPO = 'shutong20221229-rgb.github.io';
+const GITHUB_REPO = 'vblog';
 const BRANCH = 'main';
 const SCRIPT_VERSION = '1.1';
 

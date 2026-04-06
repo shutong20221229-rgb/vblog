@@ -1,8 +1,33 @@
 document.addEventListener('DOMContentLoaded', () => {
     const postsGrid = document.getElementById('posts-grid');
     const body = document.body;
-    const currentCategory = body.getAttribute('data-category'); // e.g., "Journeys", "Gallery"
+    const currentCategory = body.getAttribute('data-category');
     
+    // Elements to update from config
+    const siteLogo = document.querySelector('.logo');
+    const heroTitle = document.querySelector('.hero h1');
+    const heroSubtitle = document.querySelector('.hero p');
+    const footerText = document.querySelector('footer p');
+
+    // Fetch and apply config
+    const fetchConfig = async () => {
+        try {
+            const response = await fetch('data/config.json');
+            if (!response.ok) return;
+            const config = await response.json();
+            
+            if (siteLogo) siteLogo.innerText = config.siteTitle + ' />';
+            if (heroTitle && body.id === 'home-page') heroTitle.innerText = config.heroTitle;
+            if (heroSubtitle && body.id === 'home-page') heroSubtitle.innerText = config.heroSubtitle;
+            if (footerText) footerText.innerText = config.footerText;
+            
+            // Update document title for index only
+            if (body.id === 'home-page') document.title = `${config.siteTitle} | 个人日志博客`;
+        } catch (error) {
+            console.error('Error fetching config:', error);
+        }
+    };
+
     // Fetch and render posts
     const fetchPosts = async () => {
         try {
@@ -60,5 +85,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Initial load
+    fetchConfig();
     fetchPosts();
 });

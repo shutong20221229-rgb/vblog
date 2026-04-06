@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>博客后台管理 | MY BLOG Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Admin Specific Styling */
+        .admin-login {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .admin-login input {
+            width: 100%;
+            padding: 0.8rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+            border: 1px solid rgba(0,0,0,0.1);
+            background: rgba(255,255,255,0.5);
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            background: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
+        }
+
+        .admin-dashboard {
+            display: none;
+            padding: 2rem 5%;
+        }
+
+        .admin-nav {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .admin-section {
+            display: none;
+        }
+
+        .admin-section.active {
+            display: block;
+        }
+
+        /* Post Cards in Admin */
+        .admin-post-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .post-info h3 { margin: 0; font-size: 1.1rem; }
+        .post-info p { margin: 0; font-size: 0.85rem; color: var(--secondary-text); }
+
+        .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; margin-left: 0.5rem; }
+        .btn-danger { background: #e74c3c; }
+
+        /* Form Styling */
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border-radius: 8px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .form-group textarea { height: 150px; resize: vertical; }
+
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 1rem 2rem;
+            background: #2ecc71;
+            color: white;
+            border-radius: 8px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <nav class="glass">
+            <a href="index.html" class="logo">Moments Admin /></a>
+            <ul class="nav-links">
+                <li><a href="index.html">返回首页</a></li>
+                <li><a href="#" onclick="logout()">退出登录</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Login Screen -->
+    <div id="login-container" class="admin-login glass fade-in">
+        <h2>管理员登录</h2>
+        <p>请输入您的 GitHub Token</p>
+        <input type="password" id="github-token" placeholder="ghp_xxxxxxxxxxxxxxx">
+        <button class="btn" onclick="login()">验证并进入</button>
+        <p style="font-size: 0.8rem; margin-top: 1rem;"><a href="https://github.com/settings/tokens" target="_blank">获取 Token 教程</a></p>
+    </div>
+
+    <!-- Dashboard Content -->
+    <main id="dashboard" class="admin-dashboard fade-in">
+        <nav class="admin-nav">
+            <button class="btn glass" onclick="showSection('posts')">文章管理</button>
+            <button class="btn glass" onclick="showSection('settings')">布局设置</button>
+            <button class="btn glass" onclick="showSection('add-post')">发布文章 +</button>
+        </nav>
+
+        <!-- Posts Management -->
+        <section id="posts-section" class="admin-section active">
+            <h2>所有文章</h2>
+            <div id="admin-posts-list">
+                <!-- Dynamically populated -->
+            </div>
+        </section>
+
+        <!-- Site Settings -->
+        <section id="settings-section" class="admin-section">
+            <h2>主页布局设置</h2>
+            <div class="glass" style="padding: 2rem;">
+                <div class="form-group">
+                    <label>博客名称</label>
+                    <input type="text" id="config-title">
+                </div>
+                <div class="form-group">
+                    <label>Hero 标题</label>
+                    <input type="text" id="config-hero-title">
+                </div>
+                <div class="form-group">
+                    <label>Hero 副标题</label>
+                    <textarea id="config-hero-subtitle"></textarea>
+                </div>
+                <button class="btn" onclick="saveConfig()">保存设置 并发布</button>
+            </div>
+        </section>
+
+        <!-- Add/Edit Post Form -->
+        <section id="post-form-section" class="admin-section">
+            <h2 id="form-title">撰写新文章</h2>
+            <div class="glass" style="padding: 2rem;">
+                <input type="hidden" id="edit-post-id">
+                <div class="form-group">
+                    <label>文章标题</label>
+                    <input type="text" id="post-title">
+                </div>
+                <div class="form-group">
+                    <label>分类 (Journeys, Gallery, Moments)</label>
+                    <input type="text" id="post-category">
+                </div>
+                <div class="form-group">
+                    <label>封面图片 URL (可选 Unsplash 链接)</label>
+                    <input type="text" id="post-image">
+                </div>
+                <div class="form-group">
+                    <label>摘要</label>
+                    <input type="text" id="post-excerpt">
+                </div>
+                <div class="form-group">
+                    <label>内容正文</label>
+                    <textarea id="post-content"></textarea>
+                </div>
+                <button class="btn" onclick="savePost()">发布文章</button>
+                <button class="btn glass" onclick="showSection('posts')">取消</button>
+            </div>
+        </section>
+    </main>
+
+    <div id="toast">操作成功！</div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>

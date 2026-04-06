@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fetch and apply config
     const fetchConfig = async () => {
         try {
-            const response = await fetch('data/config.json');
+            const response = await fetch(`data/config.json?v=${Date.now()}`);
             if (!response.ok) return;
             const config = await response.json();
             
@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fetch and render posts
     const fetchPosts = async () => {
         try {
-            const response = await fetch('data/posts.json');
+            const response = await fetch(`data/posts.json?v=${Date.now()}`);
             if (!response.ok) throw new Error('Network response was not ok');
             let posts = await response.json();
             

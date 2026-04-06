@@ -116,6 +116,7 @@
     <div id="login-container" class="admin-login glass fade-in">
         <h2>管理员登录</h2>
         <p>请输入您的 GitHub Token</p>
+        <p id="repo-id-display" style="font-size: 0.7rem; color: var(--secondary-text); margin-bottom: 1rem;">正在指向: shutong20221229-rgb/vblog</p>
         <input type="password" id="github-token" placeholder="ghp_xxxxxxxxxxxxxxx">
         <button class="btn" onclick="login()">验证并进入</button>
         <p style="font-size: 0.8rem; margin-top: 1rem;"><a href="https://github.com/settings/tokens" target="_blank">获取 Token 教程</a></p>
@@ -153,7 +154,7 @@
                     <label>Hero 副标题</label>
                     <textarea id="config-hero-subtitle"></textarea>
                 </div>
-                <button class="btn" onclick="saveConfig()">保存设置 并发布</button>
+                <button id="save-config-btn" class="btn" onclick="saveConfig()">保存设置 并发布</button>
             </div>
         </section>
 
@@ -182,7 +183,7 @@
                     <label>内容正文</label>
                     <textarea id="post-content"></textarea>
                 </div>
-                <button class="btn" onclick="savePost()">发布文章</button>
+                <button id="save-post-btn" class="btn" onclick="savePost()">发布文章</button>
                 <button class="btn glass" onclick="showSection('posts')">取消</button>
             </div>
         </section>
@@ -190,6 +191,6 @@
 
     <div id="toast">操作成功！</div>
 
-    <script src="js/admin.js"></script>
+    <script src="js/admin.js?v=1.1"></script>
 </body>
 </html>

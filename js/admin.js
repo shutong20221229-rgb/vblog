@@ -1,6 +1,9 @@
 const GITHUB_OWNER = 'shutong20221229-rgb';
 const GITHUB_REPO = 'vblog';
 const BRANCH = 'main';
+const SCRIPT_VERSION = '1.1';
+
+console.log(`Admin Script Version ${SCRIPT_VERSION} loaded. Repo: ${GITHUB_OWNER}/${GITHUB_REPO}`);
 
 let githubToken = localStorage.getItem('github_token');
 let posts = [];
@@ -73,7 +76,7 @@ async function fetchData() {
 async function getFileContent(path) {
     try {
         const headers = githubToken ? { 'Authorization': `token ${githubToken}` } : {};
-        const response = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${path}?ref=${BRANCH}`, {
+        const response = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${path}?ref=${BRANCH}&t=${Date.now()}`, {
             headers: headers
         });
 
@@ -94,7 +97,7 @@ async function getFileContent(path) {
         console.error(`Error fetching ${path}:`, error);
         // Final fallback if everything fails
         try {
-            const finalRes = await fetch(path);
+            const finalRes = await fetch(`${path}?t=${Date.now()}`);
             if (finalRes.ok) return await finalRes.json();
         } catch (e) {}
         return [];
@@ -130,7 +133,14 @@ function populateConfig() {
 }
 
 // Save Content via GitHub API
-async function saveToGithub(path, content, message) {
+async function saveToGithub(path, content, message, btnId) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+
+    const originalText = btn.innerText;
+    btn.innerText = '正在保存并发布...';
+    btn.disabled = true;
+
     try {
         // 1. Get current SHA
         const getFile = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${path}?ref=${BRANCH}`, {
@@ -157,23 +167,20 @@ async function saveToGithub(path, content, message) {
         });
 
         if (response.ok) {
-            showToast('已保存并开始发布...');
+            showToast('已保存！正在同步到 GitHub Pages...');
             return true;
         } else {
             const errorData = await response.json();
-            if (response.status === 403 || response.status === 401) {
-                alert(`保存失败：请确保您的 Token 具有 "repo" 权限且未过期。\n错误信息: ${errorData.message}`);
-            } else if (response.status === 404) {
-                alert(`保存失败：仓库或文件路径未找到。\n当前仓库: ${GITHUB_OWNER}/${GITHUB_REPO}`);
-            } else {
-                alert(`保存失败 (HTTP ${response.status}): ${errorData.message}`);
-            }
+            alert(`保存失败 (HTTP ${response.status}): ${errorData.message}`);
             return false;
         }
     } catch (error) {
         console.error('Save error:', error);
-        alert('保存过程中出错');
+        alert('保存过程中出错，请检查网络');
         return false;
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
     }
 }
 
@@ -226,7 +233,7 @@ async function savePost() {
         posts.push(postData);
     }
 
-    const success = await saveToGithub('data/posts.json', posts, idValue ? 'Update post' : 'Add new post');
+    const success = await saveToGithub('data/posts.json', posts, idValue ? 'Update post' : 'Add new post', 'save-post-btn');
     if (success) {
         showSection('posts');
         renderPosts();
@@ -252,7 +259,7 @@ async function saveConfig() {
         footerText: siteConfig.footerText
     };
 
-    const success = await saveToGithub('data/config.json', updatedConfig, 'Update site config');
+    const success = await saveToGithub('data/config.json', updatedConfig, 'Update site config', 'save-config-btn');
     if (success) {
         siteConfig = updatedConfig;
     }

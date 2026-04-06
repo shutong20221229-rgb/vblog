@@ -72,14 +72,31 @@ async function fetchData() {
 
 async function getFileContent(path) {
     try {
+        const headers = githubToken ? { 'Authorization': `token ${githubToken}` } : {};
         const response = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${path}?ref=${BRANCH}`, {
-            headers: { 'Authorization': `token ${githubToken}` }
+            headers: headers
         });
+
+        if (response.status === 403 || response.status === 401) {
+            console.warn(`Unauthorized to fetch ${path} via API. Falling back to public fetch...`);
+            // Fallback for public repos: try fetching directly from the site
+            const publicRes = await fetch(`${path}?t=${Date.now()}`); 
+            if (publicRes.ok) return await publicRes.json();
+            throw new Error(`Access denied (403/401) and fallback failed for ${path}`);
+        }
+
+        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+
         const data = await response.json();
         const content = decodeURIComponent(escape(atob(data.content)));
         return JSON.parse(content);
     } catch (error) {
         console.error(`Error fetching ${path}:`, error);
+        // Final fallback if everything fails
+        try {
+            const finalRes = await fetch(path);
+            if (finalRes.ok) return await finalRes.json();
+        } catch (e) {}
         return [];
     }
 }
@@ -143,7 +160,14 @@ async function saveToGithub(path, content, message) {
             showToast('已保存并开始发布...');
             return true;
         } else {
-            alert('保存失败，请检查网络或 Token 权限');
+            const errorData = await response.json();
+            if (response.status === 403 || response.status === 401) {
+                alert(`保存失败：请确保您的 Token 具有 "repo" 权限且未过期。\n错误信息: ${errorData.message}`);
+            } else if (response.status === 404) {
+                alert(`保存失败：仓库或文件路径未找到。\n当前仓库: ${GITHUB_OWNER}/${GITHUB_REPO}`);
+            } else {
+                alert(`保存失败 (HTTP ${response.status}): ${errorData.message}`);
+            }
             return false;
         }
     } catch (error) {

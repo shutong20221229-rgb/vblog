@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moments in Light | 文章详情</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <nav class="glass">
+            <a href="index.html" class="logo">Moments /></a>
+            <ul class="nav-links">
+                <li><a href="index.html">首页 Home</a></li>
+                <li><a href="index.html#journeys">游记 Journeys</a></li>
+                <li><a href="index.html#gallery">图库 Gallery</a></li>
+                <li><a href="index.html#about">关于 About</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <article id="post-detail" class="fade-in">
+            <a href="index.html" class="back-btn">&larr; 返回列表</a>
+            <div id="post-content-container">
+                <!-- Post content will be dynamically loaded here -->
+                <div class="loading-placeholder">正在加载内容...</div>
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Moments in Light. Crafted with heart.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(window.location.search);
+            const postId = params.get('id');
+            const container = document.getElementById('post-content-container');
+
+            if (!postId) {
+                container.innerHTML = '<p class="error">找不到文章 ID。</p>';
+                return;
+            }
+
+            try {
+                const response = await fetch('data/posts.json');
+                const posts = await response.json();
+                const post = posts.find(p => p.id == postId);
+
+                if (!post) {
+                    container.innerHTML = '<p class="error">未找到该文章。</p>';
+                    return;
+                }
+
+                // Update document title
+                document.title = `${post.title} | Moments in Light`;
+
+                // Render post
+                container.innerHTML = `
+                    <header class="post-header">
+                        <span class="card-category">${post.category}</span>
+                        <h1>${post.title}</h1>
+                        <p class="card-meta">${post.date}</p>
+                    </header>
+                    <img src="${post.image}" alt="${post.title}" class="post-banner glass">
+                    <section class="post-content glass">
+                        <p>${post.content}</p>
+                    </section>
+                `;
+            } catch (error) {
+                console.error('Error fetching post:', error);
+                container.innerHTML = '<p class="error">加载内容失败，请稍后再试。</p>';
+            }
+        });
+    </script>
+</body>
+</html>
